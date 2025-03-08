@@ -13,7 +13,7 @@ variable "aws_region" {
 
 variable "stack" {
   description = "Nome da stack"
-  default     = "Devops"
+  default     = "devops"
 }
 
 variable "vpc_cidr" {

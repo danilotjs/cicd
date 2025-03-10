@@ -1,4 +1,4 @@
-FROM centos:7
+FROM httpd:latest
 LABEL maintainer "Danilo"
 RUN yum -y install httpd
 RUN yum -y install php

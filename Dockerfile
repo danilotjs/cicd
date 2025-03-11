@@ -1,4 +1,4 @@
-FROM centos:latest
+FROM almalinux
 LABEL maintainer "Danilo"
 RUN yum -y install httpd
 RUN yum -y install php

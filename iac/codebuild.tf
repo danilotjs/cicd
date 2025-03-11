@@ -70,7 +70,7 @@ data "aws_iam_policy_document" "codebuild" {
     effect  = "Allow"
     actions = ["s3:*"]
     resources = [
-      "arn:aws:codebuild:us-east-1:361769602634:report-group/devops-*"
+      "*"
     ]
   }
 }

@@ -25,28 +25,186 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
 {
   "Version": "2012-10-17",
   "Statement": [
-    {
-      "Effect":"Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:GetObjectVersion",
-        "s3:GetBucketVersioning",
-        "s3:PutObject"
-      ],
-      "Resource": [
-        "arn:aws:s3:::terraform-fullstate",
-        "arn:aws:s3:::terraform-fullstate/*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codebuild:BatchGetBuilds",
-        "codebuild:StartBuild",
-        "ecr:*"
-      ],
-      "Resource": "*"
-    }
+      {
+          "Action": [
+              "iam:PassRole"
+          ],
+          "Resource": "*",
+          "Effect": "Allow",
+          "Condition": {
+              "StringEqualsIfExists": {
+                  "iam:PassedToService": [
+                      "cloudformation.amazonaws.com",
+                      "elasticbeanstalk.amazonaws.com",
+                      "ec2.amazonaws.com",
+                      "ecs-tasks.amazonaws.com"
+                  ]
+              }
+          }
+      },
+      {
+          "Action": [
+              "codecommit:CancelUploadArchive",
+              "codecommit:GetBranch",
+              "codecommit:GetCommit",
+              "codecommit:GetRepository",
+              "codecommit:GetUploadArchiveStatus",
+              "codecommit:UploadArchive"
+          ],
+          "Resource": "*",
+          "Effect": "Allow"
+      },
+      {
+          "Action": [
+              "codedeploy:CreateDeployment",
+              "codedeploy:GetApplication",
+              "codedeploy:GetApplicationRevision",
+              "codedeploy:GetDeployment",
+              "codedeploy:GetDeploymentConfig",
+              "codedeploy:RegisterApplicationRevision"
+          ],
+          "Resource": "*",
+          "Effect": "Allow"
+      },
+      {
+          "Action": [
+              "codestar-connections:UseConnection"
+          ],
+          "Resource": "*",
+          "Effect": "Allow"
+      },
+      {
+          "Action": [
+              "elasticbeanstalk:*",
+              "ec2:*",
+              "elasticloadbalancing:*",
+              "autoscaling:*",
+              "cloudwatch:*",
+              "s3:*",
+              "sns:*",
+              "cloudformation:*",
+              "rds:*",
+              "sqs:*",
+              "ecs:*"
+          ],
+          "Resource": "*",
+          "Effect": "Allow"
+      },
+      {
+          "Action": [
+              "lambda:InvokeFunction",
+              "lambda:ListFunctions"
+          ],
+          "Resource": "*",
+          "Effect": "Allow"
+      },
+      {
+          "Action": [
+              "opsworks:CreateDeployment",
+              "opsworks:DescribeApps",
+              "opsworks:DescribeCommands",
+              "opsworks:DescribeDeployments",
+              "opsworks:DescribeInstances",
+              "opsworks:DescribeStacks",
+              "opsworks:UpdateApp",
+              "opsworks:UpdateStack"
+          ],
+          "Resource": "*",
+          "Effect": "Allow"
+      },
+      {
+          "Action": [
+              "cloudformation:CreateStack",
+              "cloudformation:DeleteStack",
+              "cloudformation:DescribeStacks",
+              "cloudformation:UpdateStack",
+              "cloudformation:CreateChangeSet",
+              "cloudformation:DeleteChangeSet",
+              "cloudformation:DescribeChangeSet",
+              "cloudformation:ExecuteChangeSet",
+              "cloudformation:SetStackPolicy",
+              "cloudformation:ValidateTemplate"
+          ],
+          "Resource": "*",
+          "Effect": "Allow"
+      },
+      {
+          "Action": [
+              "codebuild:BatchGetBuilds",
+              "codebuild:StartBuild",
+              "codebuild:BatchGetBuildBatches",
+              "codebuild:StartBuildBatch"
+          ],
+          "Resource": "*",
+          "Effect": "Allow"
+      },
+      {
+          "Effect": "Allow",
+          "Action": [
+              "devicefarm:ListProjects",
+              "devicefarm:ListDevicePools",
+              "devicefarm:GetRun",
+              "devicefarm:GetUpload",
+              "devicefarm:CreateUpload",
+              "devicefarm:ScheduleRun"
+          ],
+          "Resource": "*"
+      },
+      {
+          "Effect": "Allow",
+          "Action": [
+              "servicecatalog:ListProvisioningArtifacts",
+              "servicecatalog:CreateProvisioningArtifact",
+              "servicecatalog:DescribeProvisioningArtifact",
+              "servicecatalog:DeleteProvisioningArtifact",
+              "servicecatalog:UpdateProduct"
+          ],
+          "Resource": "*"
+      },
+      {
+          "Effect": "Allow",
+          "Action": [
+              "cloudformation:ValidateTemplate"
+          ],
+          "Resource": "*"
+      },
+      {
+          "Effect": "Allow",
+          "Action": [
+              "ecr:DescribeImages"
+          ],
+          "Resource": "*"
+      },
+      {
+          "Effect": "Allow",
+          "Action": [
+              "states:DescribeExecution",
+              "states:DescribeStateMachine",
+              "states:StartExecution"
+          ],
+          "Resource": "*"
+      },
+      {
+          "Effect": "Allow",
+          "Action": [
+              "appconfig:StartDeployment",
+              "appconfig:StopDeployment",
+              "appconfig:GetDeployment"
+          ],
+          "Resource": "*"
+      },
+      {
+          "Effect": "Allow",
+          "Action": [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents"
+          ],
+          "Resource": [
+              "arn:aws:logs:us-east-1:361769602634:log-group:/aws/codepipeline/devops-pipeline",
+              "arn:aws:logs:us-east-1:361769602634:log-group:/aws/codepipeline/devops-pipeline:log-stream:*"
+          ]
+      }
   ]
 }
 EOF
@@ -75,7 +233,7 @@ resource "aws_codepipeline" "ecs_pipeline" {
 
       configuration = {
         BranchName = "main"
-        ConnectionArn = "arn:aws:codeconnections:us-east-1:361769602634:connection/7a05139e-1ad4-4e35-be7f-442349d2b576"
+        ConnectionArn = "arn:aws:codeconnections:us-east-1:361769602634:connection/14454ac0-cdb6-4178-ac26-119da04561bb"
         DetectChanges = "false"
         FullRepositoryId = "danilotjs/cicd"
         OutputArtifactFormat = "CODE_ZIP"

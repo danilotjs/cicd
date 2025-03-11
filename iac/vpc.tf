@@ -26,21 +26,6 @@ resource "aws_subnet" "public_subnets" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# PRIVATE SUBNETS
-# ---------------------------------------------------------------------------------------------------------------------
-
-resource "aws_subnet" "private_subnets" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.128.0/20"
-  map_public_ip_on_launch = false
-  availability_zone = "us-east-1a"
-
-  tags = {
-    Name = "${var.stack}-Private-Subnet"
-  }
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
 # INTERNET GATEWAY
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -71,49 +56,4 @@ resource "aws_route_table" "public_rt" {
 resource "aws_route_table_association" "public_subnet_asso" {
  subnet_id      = aws_subnet.public_subnets.id
  route_table_id = aws_route_table.public_rt.id
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# ELASTIC IPS
-# ---------------------------------------------------------------------------------------------------------------------
-
-resource "aws_eip" "eip" {
-  depends_on = [aws_internet_gateway.igw]
-  tags = {
-    Name = "${var.stack}-eip"
-  }
-}
-
-
-# ---------------------------------------------------------------------------------------------------------------------
-# NAT GATEWAY
-# ---------------------------------------------------------------------------------------------------------------------
-
-resource "aws_nat_gateway" "nat" {
-  subnet_id     = aws_subnet.private_subnets.id
-  allocation_id = aws_eip.eip.id
-  tags = {
-    Name = "${var.stack}-NatGateway"
-  }
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# PRIVATE ROUTE TABLE
-# ---------------------------------------------------------------------------------------------------------------------
-
-resource "aws_route_table" "private-route-table" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat.id
-  }
-  tags = {
-    Name = "Private Route"
-  }
-}
-
-resource "aws_route_table_association" "private_subnet_nt" {
- subnet_id      = aws_subnet.private_subnets.id
- route_table_id = aws_route_table.private-route-table.id
 }

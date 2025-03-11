@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_vpc" "main" {
-  cidr_block           = var.vpc_cidr
+  cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
   tags = {
     Name = "${var.stack}-VPC"
@@ -30,13 +30,13 @@ resource "aws_subnet" "public_subnets" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_subnet" "private_subnets" {
-  count             = length(var.private_subnet_cidrs)
   vpc_id            = aws_vpc.main.id
-  cidr_block        = element(var.private_subnet_cidrs, count.index)
-  availability_zone = element(var.azs, count.index)
+  cidr_block        = "10.0.128.0/20"
+  map_public_ip_on_launch = false
+  availability_zone = "us-east-1a"
 
   tags = {
-    Name = "${var.stack}-Private-Subnet-${count.index + 1}"
+    Name = "${var.stack}-Private-Subnet"
   }
 }
 
@@ -69,55 +69,51 @@ resource "aws_route_table" "public_rt" {
 }
 
 resource "aws_route_table_association" "public_subnet_asso" {
- count = length(var.public_subnet_cidrs)
- subnet_id      = element(aws_subnet.public_subnets[*].id, count.index)
+ subnet_id      = aws_subnet.public_subnets.id
  route_table_id = aws_route_table.public_rt.id
 }
 
-## ---------------------------------------------------------------------------------------------------------------------
-## ELASTIC IPS
-## ---------------------------------------------------------------------------------------------------------------------
-#
-#resource "aws_eip" "eip" {
-#  count      = var.az_count
-#  domain     = "vpc"
-#  depends_on = [aws_internet_gateway.igw]
-#  tags = {
-#    Name = "${var.stack}-eip"
-#  }
-#}
-#
-#
-## ---------------------------------------------------------------------------------------------------------------------
-## NAT GATEWAY
-## ---------------------------------------------------------------------------------------------------------------------
-#
-#resource "aws_nat_gateway" "nat" {
-#  count         = var.az_count
-#  subnet_id     = element(aws_subnet.public.*.id, count.index)
-#  allocation_id = element(aws_eip.eip.*.id, count.index)
-#  tags = {
-#    Name = "${var.stack}-NatGateway-${count.index + 1}"
-#  }
-#}
-#
-## ---------------------------------------------------------------------------------------------------------------------
-## PRIVATE ROUTE TABLE
-## ---------------------------------------------------------------------------------------------------------------------
-#
-#resource "aws_route_table" "private-route-table" {
-#  count  = var.az_count
-#  vpc_id = aws_vpc.main.id
-#
-#  route {
-#    cidr_block     = "0.0.0.0/0"
-#    nat_gateway_id = element(aws_nat_gateway.nat.*.id, count.index)
-#  }
-#  tags = {
-#    Name = "${var.stack}-PrivateRouteTable"
-#  }
-#}
-#
-#
-#
-#
+# ---------------------------------------------------------------------------------------------------------------------
+# ELASTIC IPS
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "aws_eip" "eip" {
+  depends_on = [aws_internet_gateway.igw]
+  tags = {
+    Name = "${var.stack}-eip"
+  }
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# NAT GATEWAY
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "aws_nat_gateway" "nat" {
+  subnet_id     = aws_subnet.private_subnets.id
+  allocation_id = aws_eip.eip.id
+  tags = {
+    Name = "${var.stack}-NatGateway"
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# PRIVATE ROUTE TABLE
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "aws_route_table" "private-route-table" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat.id
+  }
+  tags = {
+    Name = "Private Route"
+  }
+}
+
+resource "aws_route_table_association" "private_subnet_nt" {
+ subnet_id      = aws_subnet.private_subnets.id
+ route_table_id = aws_route_table.private-route-table.id
+}

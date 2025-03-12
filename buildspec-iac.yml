@@ -1,0 +1,30 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      docker: latest
+    commands:
+      - apt-get update && apt-get install -y unzip
+      - curl -o terraform.zip https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip
+      - unzip terraform.zip
+      - mv terraform /usr/local/bin/
+      - terraform --version
+
+  pre_build:
+    commands:
+      - echo "Iniciando o pré-build..."
+      - terraform init
+
+  build:
+    commands:
+      - echo "Validando configuração do Terraform..."
+      - terraform validate
+      - echo "Planejando mudanças..."
+      - terraform plan
+
+  post_build:
+    commands:
+      - echo "Aplicando mudanças..."
+      - terraform apply -auto-approve
+      - echo "Deploy concluído!"

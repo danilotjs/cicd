@@ -2,10 +2,6 @@
 # VARIABLES
 # ---------------------------------------------------------------------------------------------------------------------
 
-variable "aws_cicd_deployment_access_key" {}
-
-variable "aws_cicd_deployment_secret_key" {}
-
 variable "aws_region" {
   description = "The AWS region to create things in."
   default     = "us-east-1"
